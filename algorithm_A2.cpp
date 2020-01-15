@@ -39,7 +39,7 @@ class gametree2{
     Board board;
     Player *player, *oppo;
     public:
-    gametree2(Board board, Player *player);
+    gametree2(Board board, Player *paayer);
     int chooseorb2();
     int Evaluate2(Board B, Board after, int x, int y);
     int minmax2(int score[30], int min_max);
