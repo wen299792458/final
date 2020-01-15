@@ -29,23 +29,23 @@ using namespace std;
 
 //BoardEva, chooseorb, gametree;
 
-struct node2{
+struct node{
     int score;
     Board B;
 };
 
-class gametree2{
+class gametree{
     private:
     Board board;
     Player *player, *oppo;
     public:
-    gametree2(Board board, Player *paayer);
-    int chooseorb2();
-    int Evaluate2(Board B, Board after, int x, int y);
-    int minmax2(int score[30], int min_max);
+    gametree(Board board, Player *player);
+    int chooseorb();
+    int Evaluate(Board B, Board after, int x, int y);
+    int minmax(int score[30], int min_max);
 };
 
-gametree2::gametree2(Board board, Player *player){
+gametree::gametree(Board board, Player *player){
     this->player = player;
     this->board = board;
     char colorPlayer = player->get_color();
@@ -61,8 +61,8 @@ gametree2::gametree2(Board board, Player *player){
 //30+30*30*30
 //2*2*2*2
 //x,y,B * 4;
-int gametree2::chooseorb2(){
-    node2 temp[4];
+int gametree::chooseorb(){
+    node temp[4];
     int scoresum[4][ROWS*COLS], maxscorenum;
     int colorplayer = player->get_color();
     int coloroppo = oppo->get_color();
@@ -80,7 +80,7 @@ int gametree2::chooseorb2(){
             temp[0].B = this->board;            
             (temp[0].B).place_orb(i/6, i%6, this->player);
             if((temp[0].B).win_the_game(*player)) return i;
-            temp[0].score = Evaluate2(board, temp[0].B,i/6,i%6);
+            temp[0].score = Evaluate(board, temp[0].B,i/6,i%6);
             for(int i2 = 0; i2 < ROWS*COLS;i2++){
                 for(int r = 0; r < ROWS*COLS; r++){
                     scoresum[2][r] = -999;        
@@ -88,7 +88,7 @@ int gametree2::chooseorb2(){
                 if(board.get_cell_color(i2/6,i2%6) == coloroppo || board.get_cell_color(i2/6,i2%6) == 'w'){
                     temp[1].B = temp[0].B;
                     (temp[1].B).place_orb(i2/6, i2%6, this->oppo);
-                    temp[1].score = Evaluate2(temp[0].B,temp[1].B,i2/6,i2%6);
+                    temp[1].score = Evaluate(temp[0].B,temp[1].B,i2/6,i2%6);
                     for(int i3 = 0; i3 < ROWS*COLS;i3++){
                         for(int r = 0; r < ROWS*COLS; r++){
                             scoresum[3][r] = 999;        
@@ -96,32 +96,33 @@ int gametree2::chooseorb2(){
                         if(board.get_cell_color(i3/6,i3%6) == colorplayer || board.get_cell_color(i3/6,i3%6) == 'w'){
                             temp[2].B = temp[1].B;
                             (temp[2].B).place_orb(i3/6, i3%6, this->player);
-                            temp[2].score = Evaluate2(temp[1].B,temp[2].B,i3/6,i3%6);
+                            temp[2].score = Evaluate(temp[1].B,temp[2].B,i3/6,i3%6);
                             for(int i4 = 0; i4 < ROWS*COLS;i4++){
                                 if(board.get_cell_color(i4/6,i4%6) == coloroppo || board.get_cell_color(i4/6,i4%6) == 'w'){
                                     temp[3].B = temp[2].B;
                                     (temp[3].B).place_orb(i4/6, i4%6, this->oppo);
-                                    scoresum[3][i4] = Evaluate2(temp[2].B,temp[3].B,i4/6,i4%6);
+                                    scoresum[3][i4] = Evaluate(temp[2].B,temp[3].B,i4/6,i4%6);
                                 }
                             }
-                            scoresum[2][i3] = minmax2(scoresum[3],0);
+                            scoresum[2][i3] = minmax(scoresum[3],0);
                             //cout << "" << scoresum[2][i3];
                         }
                     }
-                    scoresum[1][i2] = minmax2(scoresum[2],1);
+                    scoresum[1][i2] = minmax(scoresum[2],1);
                     //cout << "*" << scoresum[1][i2];
                 }
             }
-            scoresum[0][i] = minmax2(scoresum[1],0);
+            scoresum[0][i] = minmax(scoresum[1],0);
             //cout << "scoresum[0][i]: "  << i << " "<< scoresum[0][i] << endl;
             if(scoresum[0][i] > scoresum[0][maxscorenum]) maxscorenum = i;
-            else if(scoresum[0][i] == scoresum[0][maxscorenum] && rand()%5 != 0) maxscorenum = i;
+            else if(scoresum[0][i] == scoresum[0][maxscorenum] && board.get_cell_color(i/6,i%6) == 'w' 
+            && board.get_capacity(i/6,i%6) < board.get_capacity(maxscorenum/6,maxscorenum%6)) maxscorenum = i;
+            else if(scoresum[0][i] == scoresum[0][maxscorenum] && rand()%4 == 0) maxscorenum = i;
         }
     }
     return maxscorenum;
 }
-
-int gametree2::minmax2(int score[30], int min_max){
+int gametree::minmax(int score[30], int min_max){
     int min, max;
     min = max = score[0];
     for(int i = 0; i < ROWS*COLS; i++){
@@ -136,7 +137,7 @@ int gametree2::minmax2(int score[30], int min_max){
     else return min;
 }
 
-int gametree2::Evaluate2(Board B, Board After, int x, int y){
+int gametree::Evaluate(Board B, Board After, int x, int y){
     int orbplayer, orboppo, Score;
     int playercolor = player->get_color();
     int oppocolor = oppo->get_color();
@@ -158,7 +159,7 @@ int gametree2::Evaluate2(Board B, Board After, int x, int y){
             }
         }
     }
-    Score += (orbplayer-orboppo);
+    Score += (orbplayer-orboppo)*3/2;
     // 計算四個方向的opponent orb數量(越多代表這個cell越值得引爆)
     if(B.get_cell_color(x,y) == playercolor){
         if(index_range_illegal(x-1, y) == true){
@@ -209,18 +210,18 @@ int gametree2::Evaluate2(Board B, Board After, int x, int y){
     return Score;
 }
  
-void algorithm_A2(Board board, Player player, int index[]){
+void algorithm_A(Board board, Player player, int index[]){
     // //cout << board.get_capacity(0, 0) << endl;
     // //cout << board.get_orbs_num(0, 0) << endl;
     // //cout << board.get_cell_color(0, 0) << endl;
     // board.print_current_board(0, 0, 0);
     //////////// Random Algorithm ////////////
     // Here is the random algorithm for your reference, you can delete or comment it.
-    int row2, col2;
+    int row, col;
     srand(time(NULL)*time(NULL));
-    gametree2 T2(board, &player);
-    int node2 = T2.chooseorb2();
+    gametree T(board, &player);
+    int node = T.chooseorb();
     //cout << "result:   " << node << endl;
-    index[0] = node2/6;
-    index[1] = node2%6;
+    index[0] = node/6;
+    index[1] = node%6;
 }
